@@ -1,0 +1,57 @@
+version: "3"
+services: 
+  redis:
+    container_name: redis
+    image: redis:5
+    ports:
+      - 6379:6379
+    networks:
+      - app-network
+  # mongodb:
+  #   image: mongo
+  #   restart: unless-stopped
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=user
+  #     - MONGO_INITDB_ROOT_PASSWORD=password
+  #   networks:
+  #     - app-network
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - 8818:80
+    networks:
+      - app-network
+  node_backend:
+    container_name: node_backend
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 3000:3000
+    environment: 
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - /app/node_modules
+      - ./server:/app
+    networks:
+      - app-network
+  # client:
+  #   container_name: client
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   ports:
+  #     - 8080:80
+  #   volumes:
+  #     - /app/node_modules
+  #     - ./client:/app
+  #   networks:
+  #     - app-network
+networks:
+  app-network:
+    driver: bridge
